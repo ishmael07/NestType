@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NestType</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #fff;
+      color: #800080;
+      font-family: 'Roboto', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding-top: 60px;
+      padding-bottom: 60px; /* Adjust padding-bottom to ensure footer doesn't overlap */
+      min-height: 100vh;
+      overflow-y: auto; /* Change overflow-y to auto to enable scrolling */
+    }
+    
+    .footer {
+        background-color: #f1f1f1;
+        text-align: center;
+        padding: 10px;
+        margin-top: auto;
+    }
+    
+    .navbar {
+      background-color: #800080;
+      color: #fff;
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 1.5em;
+      display: flex;
+      justify-content: space-around;
+      z-index: 1;
+    }
+
+    .navbar a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .buttons-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      background-color: #f3f3f3;
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      width: 90%;
+      top: -10px;
+      max-width: 800px;
+    }
+
+    .button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #800080;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .button:hover {
+      background-color: #a020f0;
+    }
+
+    .button.active {
+      background-color: #a020f0;
+    }
+
+    .typing-test {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      width: 90%;
+      max-width: 800px;
+      
+    }
+
+    .text-to-type {
+      color: #800080;
+      margin-bottom: 20px;
+      text-align: center;
+      border: 2px solid #800080;
+      padding: 20px;
+      border-radius: 10px;
+      width: 100%;
+    }
+
+    .correct {
+      color: #008000;
+    }
+
+    .incorrect {
+      color: #ff0000;
+    }
+
+    input {
+      background-color: transparent;
+      border: none;
+      border-bottom: 2px solid #800080;
+      color: #800080;
+      font-size: 1.2em;
+      outline: none;
+      caret-color: #800080;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .wpm {
+      margin-top: 20px;
+    }
+
+    .results-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    .results-content {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .results-content > div {
+      background-color: #f9f9f9;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 90%;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      background-color: #800080;
+      margin-left: 2px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    #timer {
+      color: #ff0000;
+      font-size: 1.5em;
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      max-width: 800px;
+      height: 25px;
+      background-color: #f3f3f3;
+      border-radius: 25px;
+      margin-top: 20px;
+    }
+
+    .progress {
+      height: 25px;
+      width: 0%;
+      background-color: #800080;
+      border-radius: 25px;
+      transition: width 0.5s;
+    }
+
+    #graph-placeholder {
+      width: 100%;
+      max-width: 400px;
+      height: 200px;
+      margin-top: 20px;
+    }
+
+    #statistics {
+      margin-top: 20px;
+      text-align: left;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    @media (max-width: 600px) {
+      .navbar {
+        font-size: 1em;
+      }
+
+      .buttons-container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .button {
+        width: 100%;
+        margin: 5px 0;
+      }
+
+      .results-content {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #graph-placeholder,
+      #statistics {
+        max-width: 100%;
+        width: 90%;
+      }
+
+      .text-to-type {
+        font-size: 1em;
+        padding: 10px;
+      }
+
+      input {
+        font-size: 1em;
+      }
+
+      #timer {
+        font-size: 1.2em;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <a href="#home">NestType</a>
+  </div>
+
+  <div class="buttons-container">
+    <select id="theme-selector" class="button">
+      <option value="light">Light Mode</option>
+      <option value="dark">Dark Mode</option>
+    </select>
+    <button class="button time-option" onclick="setTimeLimit(30)">30s</button>
+    <button class="button time-option" onclick="setTimeLimit(60)">60s</button>
+    <button class="button" id="refresh" onclick="location.reload()">🔄</button>
+  </div>
+
+
+  <div class="typing-test">
+    <div id="text-to-type" class="text-to-type">The quick brown fox jumps over the lazy dog.<span class="cursor"></span></div>
+    <input type="text" id="typing-input" autocomplete="off" autofocus />
+    <div id="timer">Time: <span id="time-left"></span></div>
+    <div id="wpm" class="wpm"></div>
+    <div class="progress-bar">
+      <div id="progress" class="progress"></div>
+    </div>
+  </div>
+
+  <div class="results-container" style="display:none;">
+    <div class="results-content">
+      <div id="statistics"></div>
+      <canvas id="graph-placeholder"></canvas>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('typing-input').addEventListener('copy', function(e) {
+      e.preventDefault();
+    });
+
+    document.getElementById('typing-input').addEventListener('paste', function(e) {
+      e.preventDefault();
+    });
+
+    document.getElementById('typing-input').addEventListener('cut', function(e) {
+      e.preventDefault();
+    });
+    const phrases = [
+      "The quick brown fox jumps over the lazy dog.",
+      "A journey of a thousand miles begins with a single step.",
+      "You never did tell me how many copper pennies where in that jar; how come?",
+      "What a beautiful day it is on the beach, here in beautiful and sunny Hawaii.",
+      "Rex Quinfrey, a renowned scientist, created plans for an invisibility machine.",
+      "Do you know why all those chemicals are so hazardous to the environment?",
+      "Max Joykner sneakily drove his car around every corner looking for his dog.",
+      "The two boys collected twigs outside, for over an hour, in the freezing cold!",
+      "When do you think they will get back from their adventure in Cairo, Egypt?",
+      "That herd of bison seems to be moving quickly; does that seem normal to you?",
+      "Those diamonds and rubies will make a beautiful piece of jewelry.",
+      "In a world where technology is rapidly advancing, it’s crucial to stay updated with the latest trends and developments. From artificial intelligence to quantum computing, the future of technology is indeed promising.",
+      "The beauty of nature is beyond description. The rustling leaves, the chirping birds, the blooming flowers, and the serene landscapes, all contribute to the mesmerizing charm of our planet.",
+      "The universe is a vast expanse of space, filled with countless stars, galaxies, and celestial bodies. It’s fascinating to think about the mysteries that lie beyond our reach.",
+      "Reading is a journey of the mind, a way to travel without moving. It opens up new worlds, introduces us to different perspectives, and enriches our understanding of life.",
+      "The pursuit of knowledge is a lifelong journey. It’s not about the destination, but about the journey itself, the experiences we gain, and the wisdom we acquire.",
+      "Music is a universal language that transcends boundaries. It has the power to evoke emotions, inspire creativity, and bring people together like nothing else can.",
+      "Art is a reflection of society. It captures the essence of an era, reflects the thoughts and feelings of the artist, and provokes thought and discussion among viewers.",
+      "The human brain is a marvel of nature. Its complex structure and intricate functions make it one of the most fascinating organs in the human body.",
+      "In the realm of computer science, coding is a fundamental skill. It’s like learning a new language, one that allows us to communicate with machines and create amazing things.",
+      "The field of electricity and magnetism is fascinating. From powering our homes to enabling communication across the globe, these forces have transformed our lives in countless ways.",
+      "As the sun set over the horizon, the sky was painted with hues of orange and pink. The calm sea reflected the colors, creating a mesmerizing spectacle that left the onlookers in awe.",
+      "The forest was a symphony of sounds. The rustling of leaves, the chirping of birds, the whispering wind, all created a melody that was as enchanting as it was soothing.",
+      "The old library was a treasure trove of knowledge. Towering shelves filled with books, manuscripts, and scrolls told tales of times long past, of civilizations that once were, and of the endless pursuit of knowledge.",
+      "The mountain trail, winding through the rugged terrain, offered breathtaking views of the valley below. The journey was challenging, but the sight of the snow-capped peaks against the clear blue sky made every step worth it.",
+      "The night sky was a canvas of stars, each one twinkling with a light of its own. The silence of the night, broken only by the occasional hoot of an owl, added to the magic of the moment.",
+      "The bustling market was a sensory overload. The vibrant colors of the fresh produce, the aroma of spices, the cacophony of vendors calling out to customers, all contributed to the lively atmosphere.",
+      "The tranquil garden, with its blooming flowers and lush greenery, was a sanctuary for those seeking peace. The gentle rustling of leaves and the soft chirping of birds added to its serene charm.",
+      "The ancient ruins stood as a testament to the grandeur of a civilization that once was. Each stone, each carving, each monument, held stories of a time long past, waiting to be discovered.",
+      "The serene lake, nestled amidst the mountains, was a sight to behold. The crystal-clear water reflected the surrounding peaks, creating a picture-perfect scene that was as captivating as it was tranquil.",
+      "Solar panels gleam under the relentless summer sun.",
+      "Raindrops patter against the window, a soothing lullaby.",
+      "The city skyline, a silhouette against the setting sun.",
+      "In the heart of the forest, a waterfall cascades over moss-covered rocks, its melody harmonizing with the birdsong.",
+      "The aroma of freshly baked bread wafts through the bustling market, drawing in passersby.",
+      "Beneath the starlit sky, the campfire crackles and pops, casting dancing shadows on the tents.",
+      "As the sun dips below the horizon, the sky is painted with hues of orange and pink, the last rays of light reflecting off the calm surface of the lake.",
+      "In the quiet of the library, the rustle of turning pages and the soft tapping of keyboard keys create a symphony of sounds, a testament to the pursuit of knowledge.",
+      "Through the misty morning fog, the outline of the ancient castle emerges, its towering spires reaching towards the slowly brightening sky.",
+      "NEST+m, located on the vibrant Lower East Side of NYC, is a unique K-12 public school that nurtures gifted and talented students from all five boroughs. With its consistently top-ranked Lower, Middle, and Upper Schools, NEST+m cultivates young scholars distinguished by their intellectual capabilities, communication skills, and readiness to contribute to the world.",
+      "A dream becomes a goal when action is taken toward its achievement. - Robert Foster Bennett",
+      "One doesn't discover new lands without consenting to lose sight, for a very long time, of the shore. - Andre Gide",
+      "Always aim for achievement, and forget about success. - Helen Hayes",
+      "Doing the best at this moment puts you in the best place for the next moment. - Oprah Winfrey",
+      "Optimism is the faith that leads to achievement. Nothing can be done without hope and confidence. - Helen Keller",
+      "Whatever you can do, or dream you can, begin it. Boldness has genius, power and magic in it. - W. H. Murray",
+      "To understand the heart and mind of a person, look not at what he has already achieved, but at what he aspires to. - Khalil Gibran",
+      "Even a mistake may turn out to be the one thing necessary to a worthwhile achievement. - Henry Ford",
+      "Some of the world's greatest feats were accomplished by people not smart enough to know they were impossible. - Doug Larson",
+      "Do your best with what you have where you are. - Lucy Punch",
+      "Innovation distinguishes between a leader and a follower. - Steve Jobs",
+      "The biggest risk is not taking any risk... In a world that's changing really quickly, the only strategy that is guaranteed to fail is not taking risks. - Mark Zuckerberg",
+      "Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do what you believe is great work. - Steve Jobs",
+      "It's fine to celebrate success but it is more important to heed the lessons of failure. - Bill Gates",
+      "The question I ask myself like almost every day is, 'Am I doing the most important thing I could be doing?' - Mark Zuckerberg",
+      "I always did something I was a little not ready to do. I think that's how you grow. - Marissa Mayer",
+      "If you're changing the world, you're working on important things. You're excited to get up in the morning. - Larry Page"
+    ];
+
+    const typingInput = document.getElementById('typing-input');
+    const wpmDisplay = document.getElementById('wpm');
+    const timeLeftDisplay = document.getElementById('time-left');
+    const progressBar = document.getElementById('progress');
+    const resultsContainer = document.querySelector('.results-container');
+    const statistics = document.getElementById('statistics');
+    let currentPhrase;
+    let startTime, interval;
+    let timeLimit = 30;
+    let correctChars = 0;
+    let incorrectChars = 0;
+    let wpmData = [];
+    let resultsDisplayed = false;
+    const globalWPMs = [20, 30, 40, 50, 60, 70, 80, 90, 100]; // Example global WPM scores
+
+    function setTheme(theme) {
+      const body = document.body;
+      switch (theme) {
+        case 'light':
+          body.style.backgroundColor = '#fff';
+          body.style.color = '#800080';
+          break;
+        case 'dark':
+          body.style.backgroundColor = '#181818';
+          body.style.color = '#800080';
+          break;
+        default:
+          body.style.backgroundColor = '#fff';
+          body.style.color = '#800080';
+          break;
+      }
+    }
+
+    // Event listener for theme selection
+    document.getElementById('theme-selector').addEventListener('change', function() {
+      setTheme(this.value);
+    });
+
+    // Initial theme setup
+    setTheme(document.getElementById('theme-selector').value);
+
+    // sebi was here
+    // ishy was here :D
+
+    function updateTextDisplay(typedText) {
+      let typedLength = typedText.length;
+      let correctText = currentPhrase.substring(0, typedLength);
+      let remainderText = currentPhrase.substring(typedLength);
+      let cursorSpan = '<span class="cursor"></span>';
+
+      if (currentPhrase.startsWith(typedText)) {
+        document.getElementById('text-to-type').innerHTML =
+          `<span class="correct">${correctText}</span>${remainderText}${cursorSpan}`;
+        correctChars = typedLength;
+        incorrectChars = 0;
+      } else {
+        document.getElementById('text-to-type').innerHTML =
+          `<span class="incorrect">${typedText}</span>${remainderText}${cursorSpan}`;
+        incorrectChars = typedLength - correctText.length;
+      }
+    }
+
+            function setTimeLimit(seconds) {
+              timeLimit = seconds;
+              document.getElementById('text-to-type').innerText = '';
+              timeLeftDisplay.textContent = timeLimit;
+              startTypingTest();
+            }
+
+            function startTypingTest() {
+              currentPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+              document.getElementById('text-to-type').innerHTML = currentPhrase + '<span class="cursor"></span>';    function calculateAccuracy() {
+                const totalTypedChars = correctChars + incorrectChars;
+                if (totalTypedChars === 0) return 100; // If nothing typed, accuracy is 100%
+                return Math.round((correctChars / totalTypedChars) * 100);
+              }
+clearInterval(interval);
+              startTime = null;
+              timeLeftDisplay.textContent = timeLimit;
+              progressBar.style.width = '0%';
+            }
+
+            function startTimer() {
+              startTime = new Date();
+              interval = setInterval(() => {
+                const elapsedSeconds = Math.floor((new Date() - startTime) / 1000);
+                if (elapsedSeconds < timeLimit) {
+                  timeLeftDisplay.textContent = timeLimit - elapsedSeconds;
+                  updateWPM(elapsedSeconds);
+                } else {
+                  clearInterval(interval);
+                  displayResults();
+                }
+              }, 1000);
+            }
+
+    function updateWPM(elapsedSeconds) {
+      // Get the input value and trim it to remove leading and trailing whitespace
+      const typedText = typingInput.value.trim();
+
+      // Split the input text by whitespace and filter out any empty strings
+      const typedWords = typedText.split(/\s+/).filter(word => word.length > 0).length;
+
+      // Calculate the WPM based on the number of words and elapsed time in minutes
+      const minutes = elapsedSeconds / 60;
+      const wpm = minutes > 0 ? Math.round(typedWords / minutes) : 0;
+
+      // Display the WPM and store the value in the wpmData array
+      wpmDisplay.textContent = `WPM: ${wpm}`;
+      wpmData.push(wpm);
+    }
+
+
+    function displayResults() {
+      if (resultsDisplayed) return; // Prevent multiple results display
+      resultsDisplayed = true;
+
+      const endTime = new Date();
+      const totalTime = (endTime - startTime) / 60000; // Convert to minutes
+
+      // Calculate the total number of words typed accurately
+      const typedText = typingInput.value.trim();
+      const totalWords = typedText.split(/\s+/).filter(word => word.length > 0).length;
+
+      const wpm = Math.round(totalWords / totalTime);
+      const accuracy = calculateAccuracy();
+      const percentile = calculatePercentile(wpm, globalWPMs);
+      statistics.innerHTML = `
+        <div>Words: ${totalWords}</div>
+        <div>Time: ${totalTime.toFixed(2)} minutes</div>
+        <div>Accuracy: ${accuracy}%</div>
+        <div>WPM: ${wpm} (Percentile: ${percentile}%)</div>
+      `;
+      drawGraph(wpmData);
+
+      // Show results container
+      resultsContainer.style.display = 'flex';
+    }
+
+
+
+            function calculateAccuracy() {
+              const totalTypedChars = correctChars + incorrectChars;
+              if (totalTypedChars === 0) return 0;
+              return Math.round((correctChars / totalTypedChars) * 100);
+            }
+
+            function drawGraph(wpmData) {
+              const ctx = document.getElementById('graph-placeholder').getContext('2d');
+              const labels = Array.from({ length: wpmData.length }, (_, i) => i + 1);
+              const data = {
+                labels: labels,
+                datasets: [{
+                  label: 'WPM',
+                  backgroundColor: '#800080',
+                  borderColor: '#800080',
+                  data: wpmData,
+                  fill: false
+                }]
+              };
+              const config = {
+                type: 'line',
+                data: data,
+                options: {
+                  scales: {
+                    y: {
+                      min: 0,
+                      max: 250
+                    }
+                  }
+                }
+              };
+              new Chart(ctx, config);
+            }
+
+            function calculatePercentile(wpm, globalWPMs) {
+              globalWPMs.push(wpm);
+              globalWPMs.sort((a, b) => a - b);
+              const rank = globalWPMs.indexOf(wpm) + 1;
+              const percentile = ((rank / globalWPMs.length) * 100).toFixed(2);
+              return percentile;
+            }
+
+            typingInput.addEventListener('input', () => {
+              const typedText = typingInput.value;
+              updateTextDisplay(typedText);
+
+              const typedLength = typingInput.value.length;
+              const totalLength = currentPhrase.length;
+              const progress = (typedLength / totalLength) * 100;
+              progressBar.style.width = progress + '%';
+
+              if (!startTime && typedText.length > 0) {
+                startTimer();
+              }
+
+              if (typedText === currentPhrase) {
+                clearInterval(interval);
+                displayResults();
+              }
+            });
+
+            typingInput.addEventListener('focus', () => {
+              if (!startTime && typingInput.value.length > 0) {
+                startTimer();
+              }
+            });
+
+            // Initializing the timer display
+            timeLeftDisplay.textContent = timeLimit;
+
+            // Set initial phrase
+            startTypingTest();
+          </script>
+
+  <div class="footer">
+      Created for NEST+m Computer Science 2023-2024 by Ishmael L & Sebastian D
+  </div>
+        </body>
+
+        </html>
